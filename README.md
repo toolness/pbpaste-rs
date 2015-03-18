@@ -12,3 +12,5 @@ Notes:
   * It doesn't currently support unicode.
   * It currently strips linefeeds out, so that the resulting output
     contains UNIX line endings instead of Windows/DOS line endings.
+  * There is no analogous `pbcopy` tool because Windows already
+    comes with one called `clip.exe`.
