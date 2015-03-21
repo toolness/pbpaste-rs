@@ -28,7 +28,7 @@ Options:
 
 fn main() {
     let mut clipboard: Vec<u8> = Vec::new();
-    let mut strip_cr: bool;
+    let strip_cr: bool;
     let args: Vec<String> = env::args().collect();
 
     match &args[..] {
