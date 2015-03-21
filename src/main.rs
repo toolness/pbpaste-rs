@@ -27,7 +27,6 @@ Options:
 }
 
 fn main() {
-    let mut clipboard: Vec<u8> = Vec::new();
     let strip_cr: bool;
     let args: Vec<String> = env::args().collect();
 
@@ -49,6 +48,8 @@ fn main() {
         _ => { return help(1); }
     }
 
+    let slice_bytes: &[u8];
+
     unsafe {
         let success = OpenClipboard(0 as winapi::HWND);
         if success == 0 {
@@ -59,18 +60,22 @@ fn main() {
             CloseClipboard();
             return;
         }
-        let slice_bytes = CStr::from_ptr(data as *const i8).to_bytes();
+        slice_bytes = CStr::from_ptr(data as *const i8).to_bytes();
+    }
 
-        for i in slice_bytes {
-            if strip_cr {
-                if *i != 13 {
-                    clipboard.push(*i);
-                }
-            } else {
+    let mut clipboard: Vec<u8> = Vec::with_capacity(slice_bytes.len());
+
+    for i in slice_bytes {
+        if strip_cr {
+            if *i != 13 {
                 clipboard.push(*i);
             }
+        } else {
+            clipboard.push(*i);
         }
+    }
 
+    unsafe {
         CloseClipboard();
     }
 
