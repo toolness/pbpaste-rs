@@ -1,5 +1,6 @@
 #![feature(io)]
 #![feature(core)]
+#![feature(exit_status)]
 
 extern crate "user32-sys" as user32;
 extern crate winapi;
@@ -8,10 +9,45 @@ use user32::{OpenClipboard, GetClipboardData, CloseClipboard};
 use std::ffi::CStr;
 use std::io::Write;
 use std::io::stdout;
+use std::env;
+
+fn help(exit_code: i32) {
+    println!("\
+Output plain-text clipboard content.
+
+Usage:
+  pbpaste [--dos|--unix]
+
+Options:
+  -h --help    Show this screen.
+  --dos        Output DOS (CR+LF) line endings.
+  --unix       Output Unix (LF) line endings.
+");
+    std::env::set_exit_status(exit_code);
+}
 
 fn main() {
     let mut clipboard: Vec<u8> = Vec::new();
-    let strip_linefeeds = true;
+    let mut strip_linefeeds: bool;
+    let args: Vec<String> = env::args().collect();
+
+    match &args[..] {
+        [_] => {
+            strip_linefeeds = true;
+        },
+        [_, ref option] => {
+            match &option[..] {
+                "-h" => { return help(0); },
+                "--help" => { return help(0); },
+                "--dos" => { strip_linefeeds = false; }
+                "--unix" => { strip_linefeeds = true; }
+                _ => {
+                    return help(1);
+                }
+            }
+        },
+        _ => { return help(1); }
+    }
 
     unsafe {
         let success = OpenClipboard(0 as winapi::HWND);
