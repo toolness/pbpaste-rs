@@ -11,6 +11,10 @@ use std::io::Write;
 use std::io::stdout;
 use std::env;
 
+mod windows_clipboard_types {
+  pub static CF_TEXT: u32 = 1;
+}
+
 fn help(exit_code: i32) {
     println!("\
 Output plain-text clipboard content.
@@ -55,7 +59,7 @@ fn main() {
         if success == 0 {
             panic!("OpenClipboard() failed!");
         }
-        let data = GetClipboardData(1); // 1 is CF_TEXT
+        let data = GetClipboardData(windows_clipboard_types::CF_TEXT);
         if data.is_null() {
             CloseClipboard();
             return;
