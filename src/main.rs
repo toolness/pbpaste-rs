@@ -77,8 +77,7 @@ fn main() {
         },
         [_, ref option] => {
             match &option[..] {
-                "-h" => { return help(0); },
-                "--help" => { return help(0); },
+                "-h" | "--help" => { return help(0); },
                 "--dos" => { strip_cr = false; }
                 "--unix" => { strip_cr = true; }
                 _ => {
