@@ -7,10 +7,22 @@ things.
 To compile it, just run `cargo build`. The executable will be in
 `target\debug\pbpaste.exe`.
 
-Notes:
+## Usage
+
+```
+Output plain-text clipboard content.
+
+Usage:
+  pbpaste [--dos|--unix]
+
+Options:
+  -h --help    Show this screen.
+  --dos        Output DOS (CR+LF) line endings.
+  --unix       Output Unix (LF) line endings (default).
+```
+
+## Notes
 
   * It doesn't currently support unicode.
-  * It currently strips linefeeds out, so that the resulting output
-    contains UNIX line endings instead of Windows/DOS line endings.
   * There is no analogous `pbcopy` tool because Windows already
     comes with one called `clip.exe`.

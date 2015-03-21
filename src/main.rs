@@ -21,26 +21,26 @@ Usage:
 Options:
   -h --help    Show this screen.
   --dos        Output DOS (CR+LF) line endings.
-  --unix       Output Unix (LF) line endings.
+  --unix       Output Unix (LF) line endings (default).
 ");
     std::env::set_exit_status(exit_code);
 }
 
 fn main() {
     let mut clipboard: Vec<u8> = Vec::new();
-    let mut strip_linefeeds: bool;
+    let mut strip_cr: bool;
     let args: Vec<String> = env::args().collect();
 
     match &args[..] {
         [_] => {
-            strip_linefeeds = true;
+            strip_cr = true;
         },
         [_, ref option] => {
             match &option[..] {
                 "-h" => { return help(0); },
                 "--help" => { return help(0); },
-                "--dos" => { strip_linefeeds = false; }
-                "--unix" => { strip_linefeeds = true; }
+                "--dos" => { strip_cr = false; }
+                "--unix" => { strip_cr = true; }
                 _ => {
                     return help(1);
                 }
@@ -62,8 +62,8 @@ fn main() {
         let slice_bytes = CStr::from_ptr(data as *const i8).to_bytes();
 
         for i in slice_bytes {
-            if strip_linefeeds {
-                if *i != 10 {
+            if strip_cr {
+                if *i != 13 {
                     clipboard.push(*i);
                 }
             } else {
