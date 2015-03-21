@@ -15,8 +15,7 @@ mod windows_clipboard_types {
   pub static CF_TEXT: u32 = 1;
 }
 
-fn help(exit_code: i32) {
-    println!("\
+static USAGE: &'static str = "\
 Output plain-text clipboard content.
 
 Usage:
@@ -26,7 +25,10 @@ Options:
   -h --help    Show this screen.
   --dos        Output DOS (CR+LF) line endings.
   --unix       Output Unix (LF) line endings (default).
-");
+";
+
+fn help(exit_code: i32) {
+    println!("{}", USAGE);
     std::env::set_exit_status(exit_code);
 }
 
