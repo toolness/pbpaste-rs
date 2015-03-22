@@ -12,8 +12,7 @@ pub fn get_clipboard_text(strip_cr: bool) -> Option<Vec<u8>> {
     let slice_bytes: &[u8];
 
     unsafe {
-        let success = OpenClipboard(0 as winapi::HWND);
-        if success == 0 {
+        if OpenClipboard(0 as winapi::HWND) == 0 {
             panic!("OpenClipboard() failed!");
         }
         let data = GetClipboardData(windows_clipboard_types::CF_TEXT);
