@@ -29,36 +29,36 @@ extern "system" {
                         hMem: winapi::HANDLE) -> winapi::HANDLE;
 }
 
+fn set_clipboard_text(test_str: &str) {
+    let test_cstring = CString::new(test_str).unwrap();
+
+    unsafe {
+        if OpenClipboard(0 as winapi::HWND) == 0 {
+            panic!("OpenClipboard() failed!");
+        }
+        EmptyClipboard();
+
+        let copy = GlobalAlloc(windows_gmem_types::GMEM_MOVEABLE,
+                               (test_str.len() + 1) as winapi::SIZE_T);
+        if copy.is_null() {
+            panic!("GlobalAlloc() failed!");
+        }
+        let str_copy = GlobalLock(copy);
+        if str_copy.is_null() {
+            panic!("GlobalLock() failed!");
+        }
+        strcpy(str_copy as *mut i8, test_cstring.as_ptr());
+        GlobalUnlock(copy);
+        if SetClipboardData(pbpaste::windows_clipboard_types::CF_TEXT,
+                            copy).is_null() {
+            panic!("SetClipboardData() failed!");
+        }
+        CloseClipboard();
+    }
+}
+
 #[test]
 fn it_works() {
-    fn set_clipboard_text(test_str: &str) {
-        let test_cstring = CString::new(test_str).unwrap();
-
-        unsafe {
-            if OpenClipboard(0 as winapi::HWND) == 0 {
-                panic!("OpenClipboard() failed!");
-            }
-            EmptyClipboard();
-
-            let copy = GlobalAlloc(windows_gmem_types::GMEM_MOVEABLE,
-                                   (test_str.len() + 1) as winapi::SIZE_T);
-            if copy.is_null() {
-                panic!("GlobalAlloc() failed!");
-            }
-            let str_copy = GlobalLock(copy);
-            if str_copy.is_null() {
-                panic!("GlobalLock() failed!");
-            }
-            strcpy(str_copy as *mut i8, test_cstring.as_ptr());
-            GlobalUnlock(copy);
-            if SetClipboardData(pbpaste::windows_clipboard_types::CF_TEXT,
-                                copy).is_null() {
-                panic!("SetClipboardData() failed!");
-            }
-            CloseClipboard();
-        }
-    }
-
     set_clipboard_text("hello there");
 
     let vec = pbpaste::get_clipboard_text(false).unwrap();
