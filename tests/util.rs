@@ -26,6 +26,16 @@ extern "system" {
                         hMem: winapi::HANDLE) -> winapi::HANDLE;
 }
 
+pub fn empty_clipboard() {
+    unsafe {
+        if OpenClipboard(0 as winapi::HWND) == 0 {
+            panic!("OpenClipboard() failed!");
+        }
+        EmptyClipboard();
+        CloseClipboard();
+    }
+}
+
 pub fn set_clipboard_text(test_str: &str) {
     let test_cstring = CString::new(test_str).unwrap();
 
