@@ -170,13 +170,7 @@ fn it_works() {
     match get_clipboard_text(false) {
         Some(vec) => {
             let utf8 = std::str::from_utf8(vec.as_slice()).unwrap();
-            match utf8 {
-                "hello there" => {
-                },
-                _ => {
-                    panic!("expected clipboard to contain expected text");
-                }
-            }
+            assert_eq!(utf8, "hello there");
         },
         None => {
             panic!("expected clipboard to contain text");
