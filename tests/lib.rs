@@ -8,6 +8,7 @@ extern crate winapi;
 
 use libc::strcpy;
 use std::ffi::CString;
+use std::str::from_utf8;
 use user32::{OpenClipboard, CloseClipboard, EmptyClipboard};
 
 mod windows_gmem_types {
@@ -58,11 +59,8 @@ fn set_clipboard_text(test_str: &str) {
 }
 
 #[test]
-fn it_works() {
+fn get_clipboard_text_works() {
     set_clipboard_text("hello there");
-
-    let vec = pbpaste::get_clipboard_text(false).unwrap();
-    let utf8 = std::str::from_utf8(vec.as_slice()).unwrap();
-
-    assert_eq!(utf8, "hello there");
+    let clip_text = pbpaste::get_clipboard_text(false).unwrap();
+    assert_eq!(from_utf8(clip_text.as_slice()).unwrap(), "hello there");
 }
