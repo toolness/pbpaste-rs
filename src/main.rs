@@ -8,6 +8,11 @@ use std::io::Write;
 use std::io::stdout;
 use std::env;
 
+// Note that we have some [allow(dead_code)] attributes below because
+// the test suite complains about them (presumably because they're
+// not being tested).
+
+#[allow(dead_code)]
 static USAGE: &'static str = "\
 Output plain-text clipboard content.
 
@@ -20,11 +25,13 @@ Options:
   --unix       Output Unix (LF) line endings (default).
 ";
 
+#[allow(dead_code)]
 fn help(exit_code: i32) {
     println!("{}", USAGE);
     std::env::set_exit_status(exit_code);
 }
 
+#[allow(dead_code)]
 fn main() {
     let strip_cr: bool;
     let args: Vec<String> = env::args().collect();

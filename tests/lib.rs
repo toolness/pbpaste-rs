@@ -4,16 +4,14 @@ extern crate pbpaste;
 
 use std::str::from_utf8;
 
-mod util;
-
 fn get_clipboard_text_works_when_clipboard_has_text() {
-    util::set_clipboard_text("hello there");
+    pbpaste::set_clipboard_text("hello there");
     let clip_text = pbpaste::get_clipboard_text(false).unwrap();
     assert_eq!(from_utf8(clip_text.as_slice()).unwrap(), "hello there");
 }
 
 fn get_clipboard_text_works_when_clipboard_is_empty() {
-    util::empty_clipboard();
+    pbpaste::empty_clipboard();
     let clip_text = pbpaste::get_clipboard_text(false);
     match clip_text {
         None => {
