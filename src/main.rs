@@ -53,7 +53,9 @@ fn main() {
         _ => { return help(1); }
     }
 
-    match pbpaste::get_clipboard_text(strip_cr) {
+    let clipboard = pbpaste::Clipboard::new();
+
+    match clipboard.get_text(strip_cr) {
         Some(clipboard_text) => {
             match stdout().write_all(clipboard_text.as_slice()) {
                 Ok(_) => {
