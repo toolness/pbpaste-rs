@@ -1,6 +1,6 @@
-#![feature(io)]
 #![feature(core)]
 #![feature(exit_status)]
+#![feature(slice_patterns)]
 
 extern crate pbpaste;
 

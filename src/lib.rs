@@ -1,7 +1,7 @@
 #![feature(libc)]
 
 extern crate libc;
-extern crate "user32-sys" as user32;
+extern crate user32_sys as user32;
 extern crate winapi;
 
 use user32::{OpenClipboard, GetClipboardData, CloseClipboard, EmptyClipboard};
