@@ -14,6 +14,24 @@ fn get_clipboard_text_works_when_clipboard_has_text() {
 }
 
 #[test]
+fn get_clipboard_text_does_not_strip_cr() {
+    let mut clipboard = pbpaste::Clipboard::new();
+
+    clipboard.set_text("hello there\r\n");
+    let clip_text = clipboard.get_text(false).unwrap();
+    assert_eq!(from_utf8(clip_text.as_slice()).unwrap(), "hello there\r\n");
+}
+
+#[test]
+fn get_clipboard_text_strips_cr() {
+    let mut clipboard = pbpaste::Clipboard::new();
+
+    clipboard.set_text("hello there\r\n");
+    let clip_text = clipboard.get_text(true).unwrap();
+    assert_eq!(from_utf8(clip_text.as_slice()).unwrap(), "hello there\n");
+}
+
+#[test]
 fn get_clipboard_text_works_when_clipboard_is_empty() {
     let mut clipboard = pbpaste::Clipboard::new();
 
