@@ -1,4 +1,4 @@
-#![feature(core)]
+#![feature(convert)]
 #![feature(exit_status)]
 #![feature(slice_patterns)]
 
@@ -55,7 +55,7 @@ fn main() {
 
     match clipboard.get_text(strip_cr) {
         Some(clipboard_text) => {
-            match stdout().write_all(clipboard_text.as_slice()) {
+            match stdout().write_all(clipboard_text.as_ref()) {
                 Ok(_) => {
                     match stdout().flush() {
                         Ok(_) => {
