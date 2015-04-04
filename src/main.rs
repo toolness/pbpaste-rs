@@ -1,7 +1,3 @@
-#![feature(convert)]
-#![feature(exit_status)]
-#![feature(slice_patterns)]
-
 extern crate pbpaste;
 
 use std::io::Write;
@@ -22,7 +18,10 @@ Options:
 
 fn help(exit_code: i32) {
     println!("{}", USAGE);
-    std::env::set_exit_status(exit_code);
+    if exit_code != 0 {
+        println!("Panicking because feature(exit_status) isn't available.");
+        panic!();
+    }
 }
 
 // Note that we have the [allow(dead_code)] attribute below because
@@ -34,21 +33,21 @@ fn main() {
     let strip_cr: bool;
     let args: Vec<String> = env::args().collect();
 
-    match &args[..] {
-        [_] => {
-            strip_cr = true;
-        },
-        [_, ref option] => {
-            match &option[..] {
-                "-h" | "--help" => { return help(0); },
-                "--dos" => { strip_cr = false; }
-                "--unix" => { strip_cr = true; }
-                _ => {
-                    return help(1);
-                }
+    // We used to use pattern matching for this, but feature(slice_patterns) isn't
+    // supported in Rust 1.0.0 Beta.
+    if args.len() == 1 {
+        strip_cr = true;
+    } else if args.len() == 2 {
+        match &args[1][..] {
+            "-h" | "--help" => { return help(0); },
+            "--dos" => { strip_cr = false; }
+            "--unix" => { strip_cr = true; }
+            _ => {
+                return help(1);
             }
-        },
-        _ => { return help(1); }
+        }
+    } else {
+        return help(1);
     }
 
     let clipboard = pbpaste::Clipboard::new();

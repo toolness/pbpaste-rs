@@ -1,5 +1,3 @@
-#![feature(convert)]
-
 extern crate pbpaste;
 
 use std::str::from_utf8;

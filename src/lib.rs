@@ -1,11 +1,7 @@
-#![feature(libc)]
-
-extern crate libc;
 extern crate user32_sys as user32;
 extern crate winapi;
 
 use user32::{OpenClipboard, GetClipboardData, CloseClipboard, EmptyClipboard};
-use libc::strcpy;
 use std::ffi::CString;
 use std::ffi::CStr;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
@@ -33,6 +29,17 @@ extern "system" {
 extern "system" {
     fn SetClipboardData(uFormat: winapi::UINT,
                         hMem: winapi::HANDLE) -> winapi::HANDLE;
+}
+
+// This is based on https://github.com/rust-lang/rlibc/blob/master/src/lib.rs,
+// which isn't compatible with Rust 1.0.0 Beta.
+unsafe fn memcpy(dest: *mut i8, src: *const i8, n: usize) -> *mut i8 {
+    let mut i = 0;
+    while i < n {
+        *dest.offset(i as isize) = *src.offset(i as isize);
+        i += 1;
+    }
+    return dest;
 }
 
 pub struct Clipboard;
@@ -81,7 +88,7 @@ impl Clipboard {
             if str_copy.is_null() {
                 panic!("GlobalLock() failed!");
             }
-            strcpy(str_copy as *mut i8, test_cstring.as_ptr());
+            memcpy(str_copy as *mut i8, test_cstring.as_ptr(), test_str.len() + 1);
             GlobalUnlock(copy);
             if SetClipboardData(windows_clipboard_types::CF_TEXT,
                                 copy).is_null() {
