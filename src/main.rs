@@ -18,10 +18,7 @@ Options:
 
 fn help(exit_code: i32) {
     println!("{}", USAGE);
-    if exit_code != 0 {
-        println!("Panicking because feature(exit_status) isn't available.");
-        panic!();
-    }
+    std::process::exit(exit_code);
 }
 
 // Note that we have the [allow(dead_code)] attribute below because
