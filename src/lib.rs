@@ -1,7 +1,12 @@
-extern crate user32_sys as user32;
+extern crate user32;
+extern crate kernel32;
 extern crate winapi;
+extern crate libc;
 
-use user32::{OpenClipboard, GetClipboardData, CloseClipboard, EmptyClipboard};
+use user32::{OpenClipboard, GetClipboardData, CloseClipboard, EmptyClipboard,
+             SetClipboardData};
+use kernel32::{GlobalAlloc, GlobalLock, GlobalUnlock};
+use libc::{memcpy, c_void};
 use std::ffi::CString;
 use std::ffi::CStr;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
@@ -16,37 +21,15 @@ mod windows_gmem_types {
     pub static GMEM_MOVEABLE: u32 = 0x0002;
 }
 
-#[link(name = "kernel32")]
-extern "system" {
-    fn GlobalAlloc(uFlags: winapi::UINT,
-                   dwBytes: winapi::SIZE_T) -> winapi::HGLOBAL;
-
-    fn GlobalLock(hMem: winapi::HGLOBAL) -> winapi::LPVOID;
-    fn GlobalUnlock(hMem: winapi::HGLOBAL) -> winapi::BOOL;
-}
-
-#[link(name = "user32")]
-extern "system" {
-    fn SetClipboardData(uFormat: winapi::UINT,
-                        hMem: winapi::HANDLE) -> winapi::HANDLE;
-}
-
-// This is based on https://github.com/rust-lang/rlibc/blob/master/src/lib.rs,
-// which isn't compatible with Rust 1.0.0 Beta.
-unsafe fn memcpy(dest: *mut i8, src: *const i8, n: usize) -> *mut i8 {
-    let mut i = 0;
-    while i < n {
-        *dest.offset(i as isize) = *src.offset(i as isize);
-        i += 1;
-    }
-    return dest;
-}
-
 pub struct Clipboard;
 
 impl Clipboard {
     pub fn new() -> Clipboard {
-        while GLOBAL_CLIPBOARD_LOCK.compare_and_swap(false, true, Ordering::Relaxed) {}
+        while GLOBAL_CLIPBOARD_LOCK.compare_and_swap(
+            false,
+            true,
+            Ordering::Relaxed
+        ) {}
         Clipboard
     }
 
@@ -88,7 +71,9 @@ impl Clipboard {
             if str_copy.is_null() {
                 panic!("GlobalLock() failed!");
             }
-            memcpy(str_copy as *mut i8, test_cstring.as_ptr(), test_str.len() + 1);
+            memcpy(str_copy as *mut c_void,
+                   test_cstring.as_ptr() as *const c_void,
+                   test_str.len() + 1);
             GlobalUnlock(copy);
             if SetClipboardData(windows_clipboard_types::CF_TEXT,
                                 copy).is_null() {
