@@ -42,6 +42,11 @@ fn get_clipboard_text_strips_cr() {
 }
 
 #[test]
+fn get_clipboard_text_is_none_when_it_has_no_valid_chars() {
+    assert!(set_and_get_text("\u{2026}", false).is_none());
+}
+
+#[test]
 fn get_clipboard_text_works_when_clipboard_is_empty() {
     let mut clipboard = pbpaste::Clipboard::new();
 

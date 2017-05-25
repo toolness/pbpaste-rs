@@ -125,7 +125,7 @@ impl Clipboard {
 
         self.close();
 
-        Some(clipboard)
+        if clipboard.len() > 0 { Some(clipboard) } else { None }
     }
 }
 
