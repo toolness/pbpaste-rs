@@ -11,6 +11,14 @@ use std::ffi::CString;
 use std::ffi::CStr;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
+enum Ascii {
+    CarriageReturn = 13,
+    LineFeed = 10,
+    Tab = 9,
+    Space = 32,
+    Squiggle = 126,
+}
+
 static GLOBAL_CLIPBOARD_LOCK: AtomicBool = ATOMIC_BOOL_INIT;
 
 pub mod windows_clipboard_types {
@@ -98,13 +106,20 @@ impl Clipboard {
 
         let mut clipboard: Vec<u8> = Vec::with_capacity(slice_bytes.len());
 
-        for i in slice_bytes {
-            if strip_cr {
-                if *i != 13 {
-                    clipboard.push(*i);
-                }
-            } else {
-                clipboard.push(*i);
+        for &i in slice_bytes {
+            let mut push = false;
+
+            if i == Ascii::CarriageReturn as u8 {
+                push = !strip_cr;
+            } else if i == Ascii::LineFeed as u8 ||
+                      i == Ascii::Tab as u8 ||
+                      (i >= Ascii::Space as u8 &&
+                       i <= Ascii::Squiggle as u8) {
+                push = true;
+            }
+
+            if push {
+                clipboard.push(i);
             }
         }
 

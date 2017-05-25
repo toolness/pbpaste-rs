@@ -12,6 +12,24 @@ fn get_clipboard_text_works_when_clipboard_has_text() {
 }
 
 #[test]
+fn get_clipboard_text_ignores_unprintable_characters() {
+    let mut clipboard = pbpaste::Clipboard::new();
+
+    clipboard.set_text("how\x07 goes");
+    let clip_text = clipboard.get_text(false).unwrap();
+    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "how goes");
+}
+
+#[test]
+fn get_clipboard_text_ignores_non_ascii_characters() {
+    let mut clipboard = pbpaste::Clipboard::new();
+
+    clipboard.set_text("how\u{2026} goes");
+    let clip_text = clipboard.get_text(false).unwrap();
+    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "how goes");
+}
+
+#[test]
 fn get_clipboard_text_does_not_strip_cr() {
     let mut clipboard = pbpaste::Clipboard::new();
 
