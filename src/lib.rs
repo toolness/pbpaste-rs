@@ -13,7 +13,6 @@ use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
 use self::windows_clipboard_types::*;
 
-#[derive(PartialEq)]
 pub enum Linefeeds {
     Dos,
     Unix
@@ -132,15 +131,14 @@ impl Clipboard {
 
             slice_bytes.set_len((bytes_required - 1) as usize);
         }
+        self.close();
 
         let result = String::from_utf8(slice_bytes).unwrap();
 
-        if linefeeds == Linefeeds::Unix {
-            // TODO: Strip CRs.
+        match linefeeds {
+            Linefeeds::Unix => { strip_crs(result) },
+            Linefeeds::Dos => result,
         }
-        self.close();
-
-        result
     }
 }
 
@@ -148,4 +146,16 @@ impl Drop for Clipboard {
     fn drop(&mut self) {
         GLOBAL_CLIPBOARD_LOCK.store(false, Ordering::Relaxed);
     }
+}
+
+fn strip_crs<T: AsRef<str>>(s: T) -> String {
+    let mut result = String::with_capacity(s.as_ref().len());
+
+    for c in s.as_ref().chars() {
+        if c != '\r' {
+            result.push(c);
+        }
+    }
+
+    result
 }
