@@ -35,6 +35,11 @@ fn get_clipboard_text_strips_cr() {
 }
 
 #[test]
+fn get_clipboard_text_works_with_empty_string() {
+    assert_eq!(set_and_get_text("", Unix), "");
+}
+
+#[test]
 fn get_clipboard_text_works_when_clipboard_is_empty() {
     let mut clipboard = Clipboard::new();
 
