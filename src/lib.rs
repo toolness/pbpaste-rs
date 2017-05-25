@@ -19,6 +19,11 @@ enum Ascii {
     Squiggle = 126,
 }
 
+pub enum Linefeeds {
+    Dos,
+    Unix
+}
+
 static GLOBAL_CLIPBOARD_LOCK: AtomicBool = ATOMIC_BOOL_INIT;
 
 pub mod windows_clipboard_types {
@@ -91,7 +96,7 @@ impl Clipboard {
         self.close();
     }
 
-    pub fn get_text(&self, strip_cr: bool) -> Option<Vec<u8>> {
+    pub fn get_text(&self, linefeeds: Linefeeds) -> Option<Vec<u8>> {
         let slice_bytes: &[u8];
 
         self.open();
@@ -110,7 +115,10 @@ impl Clipboard {
             let mut push = false;
 
             if i == Ascii::CarriageReturn as u8 {
-                push = !strip_cr;
+                push = match linefeeds {
+                    Linefeeds::Dos => true,
+                    Linefeeds::Unix => false,
+                };
             } else if i == Ascii::LineFeed as u8 ||
                       i == Ascii::Tab as u8 ||
                       (i >= Ascii::Space as u8 &&
