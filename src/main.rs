@@ -22,11 +22,6 @@ fn help(exit_code: i32) {
     std::process::exit(exit_code);
 }
 
-// Note that we have the [allow(dead_code)] attribute below because
-// the test suite complains about it (presumably because
-// the function is not being tested).
-
-#[allow(dead_code)]
 fn main() {
     let linefeeds: Linefeeds;
     let args: Vec<String> = env::args().collect();
