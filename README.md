@@ -10,7 +10,7 @@ To compile it, just run `cargo build`. The executable will be in
 ## Usage
 
 ```
-Output plain-text clipboard content.
+Output plain-text clipboard content as UTF-8.
 
 Usage:
   pbpaste [--dos|--unix]

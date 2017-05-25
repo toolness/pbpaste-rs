@@ -6,7 +6,7 @@ use std::env;
 use pbpaste::{Clipboard, Newlines};
 
 static USAGE: &'static str = "\
-Output plain-text clipboard content.
+Output plain-text clipboard content as UTF-8.
 
 Usage:
   pbpaste [--dos|--unix]
