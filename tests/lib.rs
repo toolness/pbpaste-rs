@@ -2,49 +2,43 @@ extern crate pbpaste;
 
 use std::str::from_utf8;
 
-#[test]
-fn get_clipboard_text_works_when_clipboard_has_text() {
+fn set_and_get_text(s: &'static str, strip_cr: bool) -> Option<String> {
     let mut clipboard = pbpaste::Clipboard::new();
 
-    clipboard.set_text("hello there");
-    let clip_text = clipboard.get_text(false).unwrap();
-    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "hello there");
+    clipboard.set_text(s);
+    clipboard.get_text(strip_cr).map(|text| {
+        String::from(from_utf8(text.as_ref()).unwrap())
+    })
+}
+
+#[test]
+fn get_clipboard_text_works_when_clipboard_has_text() {
+    assert_eq!(set_and_get_text("hello there", false).unwrap(),
+               "hello there");
 }
 
 #[test]
 fn get_clipboard_text_ignores_unprintable_characters() {
-    let mut clipboard = pbpaste::Clipboard::new();
-
-    clipboard.set_text("how\x07 goes");
-    let clip_text = clipboard.get_text(false).unwrap();
-    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "how goes");
+    assert_eq!(set_and_get_text("how\x07 goes", false).unwrap(),
+               "how goes");
 }
 
 #[test]
 fn get_clipboard_text_ignores_non_ascii_characters() {
-    let mut clipboard = pbpaste::Clipboard::new();
-
-    clipboard.set_text("how\u{2026} goes");
-    let clip_text = clipboard.get_text(false).unwrap();
-    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "how goes");
+    assert_eq!(set_and_get_text("how\u{2026} goes", false).unwrap(),
+               "how goes");
 }
 
 #[test]
 fn get_clipboard_text_does_not_strip_cr() {
-    let mut clipboard = pbpaste::Clipboard::new();
-
-    clipboard.set_text("hello there\r\n");
-    let clip_text = clipboard.get_text(false).unwrap();
-    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "hello there\r\n");
+    assert_eq!(set_and_get_text("hello there\r\n", false).unwrap(),
+               "hello there\r\n");
 }
 
 #[test]
 fn get_clipboard_text_strips_cr() {
-    let mut clipboard = pbpaste::Clipboard::new();
-
-    clipboard.set_text("hello there\r\n");
-    let clip_text = clipboard.get_text(true).unwrap();
-    assert_eq!(from_utf8(clip_text.as_ref()).unwrap(), "hello there\n");
+    assert_eq!(set_and_get_text("hello there\r\n", true).unwrap(),
+               "hello there\n");
 }
 
 #[test]
@@ -52,12 +46,5 @@ fn get_clipboard_text_works_when_clipboard_is_empty() {
     let mut clipboard = pbpaste::Clipboard::new();
 
     clipboard.empty();
-    let clip_text = clipboard.get_text(false);
-    match clip_text {
-        None => {
-        },
-        _ => {
-            panic!("Expected no clipboard text!");
-        }
-    }
+    assert!(clipboard.get_text(false).is_none());
 }
