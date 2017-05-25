@@ -3,7 +3,7 @@ extern crate pbpaste;
 use std::io::Write;
 use std::io::stdout;
 use std::env;
-use pbpaste::{Clipboard, Linefeeds};
+use pbpaste::{Clipboard, Newlines};
 
 static USAGE: &'static str = "\
 Output plain-text clipboard content.
@@ -23,18 +23,18 @@ fn help(exit_code: i32) {
 }
 
 fn main() {
-    let linefeeds: Linefeeds;
+    let newlines: Newlines;
     let args: Vec<String> = env::args().collect();
 
     // We used to use pattern matching for this, but feature(slice_patterns) isn't
     // supported in Rust 1.0.0 Beta.
     if args.len() == 1 {
-        linefeeds = Linefeeds::Unix;
+        newlines = Newlines::Unix;
     } else if args.len() == 2 {
         match &args[1][..] {
             "-h" | "--help" => { return help(0); },
-            "--dos" => { linefeeds = Linefeeds::Dos; }
-            "--unix" => { linefeeds = Linefeeds::Unix; }
+            "--dos" => { newlines = Newlines::Dos; }
+            "--unix" => { newlines = Newlines::Unix; }
             _ => {
                 return help(1);
             }
@@ -45,7 +45,7 @@ fn main() {
 
     let clipboard = Clipboard::new();
 
-    let text = clipboard.get_text(linefeeds);
+    let text = clipboard.get_text(newlines);
     match stdout().write_all(text.as_str().as_ref()) {
         Ok(_) => {
             match stdout().flush() {

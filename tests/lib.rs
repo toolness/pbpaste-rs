@@ -1,13 +1,13 @@
 extern crate pbpaste;
 
-use pbpaste::{Clipboard, Linefeeds};
-use pbpaste::Linefeeds::*;
+use pbpaste::{Clipboard, Newlines};
+use pbpaste::Newlines::*;
 
-fn set_and_get_text(s: &'static str, lf: Linefeeds) -> String {
+fn set_and_get_text(s: &'static str, newlines: Newlines) -> String {
     let mut clipboard = Clipboard::new();
 
     clipboard.set_ascii_text(s);
-    clipboard.get_text(lf)
+    clipboard.get_text(newlines)
 }
 
 #[test]

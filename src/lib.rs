@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
 use self::windows_clipboard_types::*;
 
-pub enum Linefeeds {
+pub enum Newlines {
     Dos,
     Unix
 }
@@ -90,7 +90,7 @@ impl Clipboard {
         self.close();
     }
 
-    pub fn get_text(&self, linefeeds: Linefeeds) -> String {
+    pub fn get_text(&self, newlines: Newlines) -> String {
         let mut slice_bytes: Vec<u8>;
         let bytes_required;
 
@@ -135,9 +135,9 @@ impl Clipboard {
 
         let result = String::from_utf8(slice_bytes).unwrap();
 
-        match linefeeds {
-            Linefeeds::Unix => { strip_crs(result) },
-            Linefeeds::Dos => result,
+        match newlines {
+            Newlines::Unix => { strip_crs(result) },
+            Newlines::Dos => result,
         }
     }
 }
