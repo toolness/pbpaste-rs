@@ -23,6 +23,5 @@ Options:
 
 ## Notes
 
-  * It doesn't currently support unicode.
   * There is no analogous `pbcopy` tool because Windows already
     comes with one called `clip.exe`.

@@ -5,20 +5,15 @@ extern crate libc;
 
 use user32::{OpenClipboard, GetClipboardData, CloseClipboard, EmptyClipboard,
              SetClipboardData};
-use kernel32::{GlobalAlloc, GlobalLock, GlobalUnlock};
+use kernel32::{GlobalAlloc, GlobalLock, GlobalUnlock, WideCharToMultiByte};
+use winapi::winnt::{WCHAR};
 use libc::{memcpy, c_void};
 use std::ffi::CString;
-use std::ffi::CStr;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
-enum Ascii {
-    CarriageReturn = 13,
-    LineFeed = 10,
-    Tab = 9,
-    Space = 32,
-    Squiggle = 126,
-}
+use self::windows_clipboard_types::*;
 
+#[derive(PartialEq)]
 pub enum Linefeeds {
     Dos,
     Unix
@@ -28,6 +23,7 @@ static GLOBAL_CLIPBOARD_LOCK: AtomicBool = ATOMIC_BOOL_INIT;
 
 pub mod windows_clipboard_types {
   pub static CF_TEXT: u32 = 1;
+  pub static CF_UNICODETEXT: u32 = 13;
 }
 
 mod windows_gmem_types {
@@ -68,7 +64,7 @@ impl Clipboard {
         self.close();
     }
 
-    pub fn set_text(&mut self, test_str: &str) {
+    pub fn set_ascii_text(&mut self, test_str: &str) {
         let test_cstring = CString::new(test_str).unwrap();
 
         self.open();
@@ -88,8 +84,7 @@ impl Clipboard {
                    test_cstring.as_ptr() as *const c_void,
                    test_str.len() + 1);
             GlobalUnlock(copy);
-            if SetClipboardData(windows_clipboard_types::CF_TEXT,
-                                copy).is_null() {
+            if SetClipboardData(CF_TEXT, copy).is_null() {
                 panic!("SetClipboardData() failed!");
             }
         }
@@ -97,43 +92,53 @@ impl Clipboard {
     }
 
     pub fn get_text(&self, linefeeds: Linefeeds) -> Option<Vec<u8>> {
-        let slice_bytes: &[u8];
+        let mut slice_bytes: Vec<u8>;
+        let bytes_required;
 
         self.open();
         unsafe {
-            let data = GetClipboardData(windows_clipboard_types::CF_TEXT);
+            let data = GetClipboardData(CF_UNICODETEXT);
             if data.is_null() {
                 self.close();
                 return None;
             }
-            slice_bytes = CStr::from_ptr(data as *const i8).to_bytes();
-        }
+            bytes_required = WideCharToMultiByte(
+                winapi::winnls::CP_UTF8,                // CodePage
+                0,                                      // dwFlags
+                data as *const WCHAR,                   // lpWideCharStr
+                -1,                                     // cchWideChar
+                0 as *mut i8,                           // lpMultiByteStr
+                0,                                      // cbMultiByte
+                0 as *const i8,                         // lpDefaultChar
+                0 as *mut i32,                          // lpUsedDefaultChar
+            );
 
-        let mut clipboard: Vec<u8> = Vec::with_capacity(slice_bytes.len());
+            slice_bytes = vec![0; bytes_required as usize];
 
-        for &i in slice_bytes {
-            let mut push = false;
+            let result = WideCharToMultiByte(
+                winapi::winnls::CP_UTF8,                // CodePage
+                0,                                      // dwFlags
+                data as *const WCHAR,                   // lpWideCharStr
+                -1,                                     // cchWideChar
+                slice_bytes.as_mut_ptr() as *mut i8,    // lpMultiByteStr
+                bytes_required,                         // cbMultiByte
+                0 as *const i8,                         // lpDefaultChar
+                0 as *mut i32,                          // lpUsedDefaultChar
+            );
 
-            if i == Ascii::CarriageReturn as u8 {
-                push = match linefeeds {
-                    Linefeeds::Dos => true,
-                    Linefeeds::Unix => false,
-                };
-            } else if i == Ascii::LineFeed as u8 ||
-                      i == Ascii::Tab as u8 ||
-                      (i >= Ascii::Space as u8 &&
-                       i <= Ascii::Squiggle as u8) {
-                push = true;
+            if result == 0 {
+                panic!("WideCharToMultiByte() failed!");
             }
 
-            if push {
-                clipboard.push(i);
-            }
+            slice_bytes.set_len((bytes_required - 1) as usize);
         }
 
+        if linefeeds == Linefeeds::Unix {
+            // TODO: Strip CRs.
+        }
         self.close();
 
-        if clipboard.len() > 0 { Some(clipboard) } else { None }
+        Some(slice_bytes)
     }
 }
 
