@@ -91,7 +91,7 @@ impl Clipboard {
         self.close();
     }
 
-    pub fn get_text(&self, linefeeds: Linefeeds) -> Option<Vec<u8>> {
+    pub fn get_text(&self, linefeeds: Linefeeds) -> String {
         let mut slice_bytes: Vec<u8>;
         let bytes_required;
 
@@ -100,7 +100,7 @@ impl Clipboard {
             let data = GetClipboardData(CF_UNICODETEXT);
             if data.is_null() {
                 self.close();
-                return None;
+                return String::from("");
             }
             bytes_required = WideCharToMultiByte(
                 winapi::winnls::CP_UTF8,                // CodePage
@@ -133,12 +133,14 @@ impl Clipboard {
             slice_bytes.set_len((bytes_required - 1) as usize);
         }
 
+        let result = String::from_utf8(slice_bytes).unwrap();
+
         if linefeeds == Linefeeds::Unix {
             // TODO: Strip CRs.
         }
         self.close();
 
-        Some(slice_bytes)
+        result
     }
 }
 

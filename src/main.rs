@@ -45,23 +45,19 @@ fn main() {
 
     let clipboard = Clipboard::new();
 
-    match clipboard.get_text(linefeeds) {
-        Some(clipboard_text) => {
-            match stdout().write_all(clipboard_text.as_ref()) {
+    let text = clipboard.get_text(linefeeds);
+    match stdout().write_all(text.as_str().as_ref()) {
+        Ok(_) => {
+            match stdout().flush() {
                 Ok(_) => {
-                    match stdout().flush() {
-                        Ok(_) => {
-                        },
-                        Err(_) => {
-                            panic!("flush() failed!");
-                        }
-                    }
                 },
                 Err(_) => {
-                    panic!("write_all() failed!");
+                    panic!("flush() failed!");
                 }
             }
         },
-        None => {}
+        Err(_) => {
+            panic!("write_all() failed!");
+        }
     }
 }
