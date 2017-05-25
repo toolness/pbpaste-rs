@@ -8,6 +8,7 @@ use user32::{OpenClipboard, GetClipboardData, CloseClipboard, EmptyClipboard,
 use kernel32::{GlobalAlloc, GlobalLock, GlobalUnlock, WideCharToMultiByte};
 use winapi::winnt::{WCHAR};
 use libc::{memcpy, c_void};
+use std::mem::drop;
 use std::ffi::CString;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
@@ -29,6 +30,27 @@ mod windows_gmem_types {
     pub static GMEM_MOVEABLE: u32 = 0x0002;
 }
 
+struct ClipboardOpener;
+
+impl ClipboardOpener {
+    fn new() -> Self {
+        unsafe {
+            if OpenClipboard(0 as winapi::HWND) == 0 {
+                panic!("OpenClipboard() failed!");
+            }
+        }
+        ClipboardOpener
+    }
+}
+
+impl Drop for ClipboardOpener {
+    fn drop(&mut self) {
+        unsafe {
+            CloseClipboard();
+        }
+    }
+}
+
 pub struct Clipboard;
 
 impl Clipboard {
@@ -41,32 +63,18 @@ impl Clipboard {
         Clipboard
     }
 
-    fn open(&self) {
-        unsafe {
-            if OpenClipboard(0 as winapi::HWND) == 0 {
-                panic!("OpenClipboard() failed!");
-            }
-        }
-    }
-
-    fn close(&self) {
-        unsafe {
-            CloseClipboard();
-        }
-    }
-
     pub fn empty(&mut self) {
-        self.open();
+        let opener = ClipboardOpener::new();
         unsafe {
             EmptyClipboard();
         }
-        self.close();
+        drop(opener);
     }
 
     pub fn set_ascii_text(&mut self, test_str: &str) {
         let test_cstring = CString::new(test_str).unwrap();
 
-        self.open();
+        let opener = ClipboardOpener::new();
         unsafe {
             EmptyClipboard();
 
@@ -87,18 +95,17 @@ impl Clipboard {
                 panic!("SetClipboardData() failed!");
             }
         }
-        self.close();
+        drop(opener);
     }
 
     pub fn get_text(&self, newlines: Newlines) -> String {
         let mut slice_bytes: Vec<u8>;
         let bytes_required;
 
-        self.open();
+        let opener = ClipboardOpener::new();
         unsafe {
             let data = GetClipboardData(CF_UNICODETEXT);
             if data.is_null() {
-                self.close();
                 return String::from("");
             }
             bytes_required = WideCharToMultiByte(
@@ -131,7 +138,7 @@ impl Clipboard {
 
             slice_bytes.set_len((bytes_required - 1) as usize);
         }
-        self.close();
+        drop(opener);
 
         let result = String::from_utf8(slice_bytes).unwrap();
 
